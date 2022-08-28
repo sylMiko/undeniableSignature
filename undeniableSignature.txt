@@ -1,0 +1,77 @@
+
+from __future__ import print_function
+#zalozenia
+#liczbapierwsza
+import random
+wiad = 12 #WIADOMOSC
+liczba_bitow = 10 #LICZBABITOW
+p = next_prime(2^liczba_bitow) #liczba pierwsza
+#cialofp
+F = GF(p)
+print("Liczba F" ,F)
+#element pierwotny
+g = F.primitive_element()
+print("generator", g)
+#element losowy z ciala
+x = F.random_element()
+#czy nwd(x,p) =1
+while math.gcd(x,p)!=1:
+    x = F.random_element()
+print("kluczprywatny", x)
+#klucz publiczny
+X = pow(g, x, p)
+print("klucz publiczny", X)
+
+#generacja
+def generacja_a(pierwsza, wiadomosc, prywatny):
+    #power modulo
+    z = pow(wiadomosc, prywatny, pierwsza)
+    return z #zwraca kryptogram
+
+def weryfikacja_B_1 (pierwsza, generator, wiadomosc):
+    los1 = random.randint(1, pierwsza) #liczba a
+    los2 = random.randint(1, pierwsza) #liczba b
+    c1 = pow(wiadomosc, los1, pierwsza) #\/\/
+    c2 = pow(generator, los2, pierwsza)#\/\/
+    c = (c1*c2)%p #obliczenie c
+    return c, los1, los2
+
+def weryfikacja_A_1 (cc, generator, pierwsza, x):
+    q = random.randint(1, pierwsza) #losowanie q
+    s1a = mod(cc, p) ##\/\/
+    s1b = pow(g, q, p) #\/\/
+    s = (s1a*s1b)%p #obliczenie s1
+    s2 = pow(cc*(g^q), x, pierwsza) #obliczenie s2
+    return s, s2, q
+
+def weryfikacja_4 (q, c, g, p, X, z, a, b):
+    s11 = mod(c*(g^q), p) #obliczenie s11
+    s22a = b+q #\/\/
+    s22 = mod((X^s22a)*(z^a), p) #obliczenie s22
+    return s11, s22
+
+
+print("krok 1 gen: UzytkownikB oblicza z :liczba z: ")
+z = generacja_a(p, wiad, x)
+print(z)
+
+print("krok 1 weryf: Uzytkownik B przyjmuje w argumentach p, g i wiadomosc, wysyla do A -> c,  liczba c")
+c, a, b = weryfikacja_B_1(p, g, wiad)
+print(c)
+
+print("krok 2 weryf: Uzytkownik A oblicza s1 i s2, wysyla do B wyniki dzialan, liczba s1, s2, los1")
+s1, s2, q = weryfikacja_A_1(c, g, p, x)
+print(s1, s2, q)
+
+print("krok 3 wery: Uzytkownik B przesyla do A wartosci a i b, liczba a, b")
+print(a, b)
+
+print("krok4 wery,Uzytkownik przesyla do B wartosc q, B uzywa z, oblicza liczba s11, s22")
+s11, s22 = weryfikacja_4(q, c, g, p, X, z, a, b)
+print(s11, s22)
+
+print("krok4' wery, Sprawdzenie czy s11 == s1 i s22 == s2")
+if(s1 == s11 and s2 == s22):
+    print("PODPIS POPRAWNY")
+else:
+    print("PODPIS NIEPOPRAWNY")
